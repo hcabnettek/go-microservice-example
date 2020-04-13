@@ -1,20 +1,49 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
-	"regexp"
+
+	"github.com/hcabnettek/filmapi/errors"
+	"github.com/hcabnettek/filmapi/services"
 )
 
-type userController struct {
-	userIDPattern *regexp.Regexp
+type controller struct{}
+
+var (
+	userService services.UserService
+)
+
+// UserController interface
+type UserController interface {
+	GetUsers(response http.ResponseWriter, request *http.Request)
+	AddUser(response http.ResponseWriter, request *http.Request)
 }
 
-func (uc userController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello World"))
+// NewUserController constructor function returns UserController interface
+func NewUserController(service services.UserService) UserController {
+	userService = service
+	return &controller{}
 }
 
-func NewUserController() *userController {
-	return &userController{
-		userIDPattern: regexp.MustCompile(`^/users/(\d+)/?`),
+func (*controller) GetUsers(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json")
+	users, err := userService.FindAll()
+	if err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(response).Encode(errors.ServiceError{Message: "Error getting the users"})
 	}
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode(users)
+}
+
+func (*controller) AddUser(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json")
+	/*posts, err := postService.FindAll()
+	if err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(response).Encode(errors.ServiceError{Message: "Error getting the posts"})
+	}
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode(posts) */
 }
