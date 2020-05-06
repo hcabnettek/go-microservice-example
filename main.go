@@ -19,6 +19,10 @@ var (
 	userService    services.UserService        = services.NewUserService(userRepository)
 	userController controllers.UserController  = controllers.NewUserController(userService)
 
+	movieRepository repositories.MovieRepository = repositories.NewMongoMovieRepository()
+	movieService    services.MovieService        = services.NewMovieService(movieRepository)
+	movieController controllers.MovieController  = controllers.NewMovieController(movieService)
+
 	httpRouter routers.Router = routers.NewMuxRouter()
 )
 
@@ -32,6 +36,7 @@ func main() {
 		fmt.Fprintln(w, "Up and running...")
 	})
 
+	httpRouter.GET("/movies", movieController.GetMovies)
 	httpRouter.GET("/users", userController.GetUsers)
 	httpRouter.POST("/users", userController.AddUser)
 
